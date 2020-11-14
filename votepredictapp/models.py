@@ -1,6 +1,6 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
 
 
 class Question(models.Model):
@@ -11,11 +11,15 @@ class Question(models.Model):
 
 class Answer(models.Model):
     content = models.CharField(max_length=128)
-    question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
+    question = models.ForeignKey(
+        Question, related_name="answers", on_delete=models.CASCADE
+    )
 
 
 class Reply(models.Model):
-    question = models.ForeignKey(Question, related_name="replies", on_delete=models.CASCADE)
+    question = models.ForeignKey(
+        Question, related_name="replies", on_delete=models.CASCADE
+    )
     user = models.ForeignKey(User, related_name="replies", on_delete=models.CASCADE)
 
 
@@ -25,5 +29,9 @@ class Vote(models.Model):
 
 
 class Prediction(models.Model):
-    reply = models.OneToOneField(Reply, related_name="prediction", on_delete=models.CASCADE)
-    answer = models.ForeignKey(Answer, related_name="predictions", on_delete=models.CASCADE)
+    reply = models.OneToOneField(
+        Reply, related_name="prediction", on_delete=models.CASCADE
+    )
+    answer = models.ForeignKey(
+        Answer, related_name="predictions", on_delete=models.CASCADE
+    )
