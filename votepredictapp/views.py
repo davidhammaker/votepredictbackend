@@ -1,4 +1,7 @@
 from rest_framework import generics
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import Answer, Prediction, Question, Reply, Vote
 from .serializers import (
@@ -10,26 +13,26 @@ from .serializers import (
 )
 
 
-class QuestionList(generics.ListCreateAPIView):
+class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
     queryset = Question.objects.all()
 
 
-class AnswerList(generics.ListCreateAPIView):
+class AnswerViewSet(viewsets.ModelViewSet):
     serializer_class = AnswerSerializer
     queryset = Answer.objects.all()
 
 
-class ReplyList(generics.ListCreateAPIView):
+class ReplyViewSet(viewsets.ModelViewSet):
     serializer_class = ReplySerializer
     queryset = Reply.objects.all()
 
 
-class VoteList(generics.ListCreateAPIView):
+class VoteViewSet(viewsets.ModelViewSet):
     serializer_class = VoteSerializer
     queryset = Vote.objects.all()
 
 
-class PredictionList(generics.ListCreateAPIView):
+class PredictionViewSet(viewsets.ModelViewSet):
     serializer_class = PredictionSerializer
     queryset = Prediction.objects.all()
