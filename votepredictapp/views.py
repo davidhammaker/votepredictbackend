@@ -1,4 +1,5 @@
-from rest_framework import generics
+from datetime import datetime
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,6 +17,15 @@ from .serializers import (
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
     queryset = Question.objects.all()
+
+    @action(detail=False)
+    def active(self, _request):
+        active_questions = Question.objects.all().filter(
+            start_date__lte=datetime.today(),
+            end_date__gte=datetime.today()
+        )
+        serializer = self.get_serializer(active_questions, many=True)
+        return Response(serializer.data)
 
 
 class AnswerViewSet(viewsets.ModelViewSet):
