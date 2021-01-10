@@ -10,7 +10,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = ["id", "start_date", "end_date", "content", "answers"]
         model = Question
 
-    def get_answers(self, obj):
+    @staticmethod
+    def get_answers(obj):
         return [
             {"id": answer.id, "content": answer.content} for answer in obj.answers.all()
         ]

@@ -14,9 +14,9 @@ from .serializers import (
 )
 
 
-class QuestionViewSet(viewsets.ModelViewSet):
+class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
-    queryset = Question.objects.all()
+    queryset = Question.objects.filter(start_date__lte=datetime.now())
 
     @action(detail=False)
     def active(self, _request):
