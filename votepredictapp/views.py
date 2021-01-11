@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,15 +15,17 @@ from .serializers import (
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
-    queryset = Question.objects.filter(start_date__lte=datetime.now())
+    queryset = Question.objects.filter(
+        start_date__lte=timezone.now(),
+        end_date__gte=timezone.now(),
+    )
 
     @action(detail=False)
-    def active(self, _request):
-        active_questions = Question.objects.all().filter(
-            start_date__lte=datetime.today(),
-            end_date__gte=datetime.today()
+    def closed(self, _request):
+        closed_questions = Question.objects.all().filter(
+            end_date__lte=timezone.now()
         )
-        serializer = self.get_serializer(active_questions, many=True)
+        serializer = self.get_serializer(closed_questions, many=True)
         return Response(serializer.data)
 
 
