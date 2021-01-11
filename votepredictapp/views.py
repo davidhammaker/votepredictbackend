@@ -22,9 +22,7 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False)
     def closed(self, _request):
-        closed_questions = Question.objects.all().filter(
-            end_date__lte=timezone.now()
-        )
+        closed_questions = Question.objects.all().filter(end_date__lte=timezone.now())
         serializer = self.get_serializer(closed_questions, many=True)
         return Response(serializer.data)
 
