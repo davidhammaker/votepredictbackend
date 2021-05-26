@@ -30,20 +30,16 @@ class ReplyView(views.APIView):
     serializer_class = ReplySerializer
     permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        serializer = self.serializer_class(data=request.data)
+        return Response(serializer.get(request))
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             # The following method saves request.data automatically. I
             # am manually adding user_id to be included in
             # validated_data in the create() method of the serializer.
-            serializer.save(user_id=request.user.id)  # Can remove arg?
-            return Response(
-                {
-                    "vote": Answer.objects.get(id=request.data["vote_id"]).content,
-                    "prediction": Answer.objects.get(
-                        id=request.data["prediction_id"]
-                    ).content,
-                    "reply_id": serializer.instance.id,
-                }
-            )
+            serializer.save(user_id=request.user.id)
+            return Response(serializer.instance)
         return Response("Something went wrong.", 400)

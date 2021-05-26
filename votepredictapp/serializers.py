@@ -23,6 +23,40 @@ class ReplySerializer(serializers.Serializer):
     prediction_id = serializers.IntegerField(required=True)
     user = serializers.ReadOnlyField()
 
+    @staticmethod
+    def format_reply(reply, simple=False):
+        if simple:
+            return {
+                "id": reply.id,
+                "question": {"id": reply.question.id},
+                "vote": {"id": reply.vote.id, "answer": reply.vote.answer.id},
+                "prediction": {
+                    "id": reply.prediction.id,
+                    "answer": reply.prediction.answer.id,
+                },
+            }
+        return {
+            "id": reply.id,
+            "question": {
+                "id": reply.question.id,
+                "content": reply.question.content,
+                "answers": [
+                    {"id": answer.id, "content": answer.content}
+                    for answer in reply.question.answers.all()
+                ],
+            },
+            "vote": {"id": reply.vote.id, "answer": reply.vote.answer.id},
+            "prediction": {
+                "id": reply.prediction.id,
+                "answer": reply.prediction.answer.id,
+            },
+        }
+
+    def get(self, request):
+        replies = Reply.objects.filter(user_id=request.user.id)
+        simple = "full" not in request.query_params
+        return [self.format_reply(reply, simple=simple) for reply in replies]
+
     def create(self, validated_data):
         existing_reply = Reply.objects.get(
             user_id=validated_data["user_id"],
@@ -40,7 +74,6 @@ class ReplySerializer(serializers.Serializer):
             reply = existing_reply
         else:
             reply = Reply(
-                user_id=validated_data["user_id"],
                 question_id=validated_data["question_id"],
             )
             reply.save()
@@ -48,7 +81,7 @@ class ReplySerializer(serializers.Serializer):
             prediction = Prediction(answer=predicted_answer, reply=reply)
             vote.save()
             prediction.save()
-        return reply
+        return self.format_reply(reply)
 
     def update(self, instance, validated_data):
         pass
