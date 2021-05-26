@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Answer, Question
+from .models import Answer, Prediction, Question, Reply, Vote
 
 
 class AnswerInline(admin.StackedInline):
@@ -14,4 +14,19 @@ class QuestionAdmin(admin.ModelAdmin):
     inlines = [AnswerInline]
 
 
+class VoteInline(admin.StackedInline):
+    model = Vote
+
+
+class PredictionInline(admin.StackedInline):
+    model = Prediction
+
+
+class ReplyAdmin(admin.ModelAdmin):
+    list_display = ["question", "vote", "prediction", "user"]
+    model = Reply
+    inlines = [VoteInline, PredictionInline]
+
+
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(Reply, ReplyAdmin)
