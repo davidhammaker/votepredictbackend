@@ -52,6 +52,13 @@ class ReplySerializer(serializers.Serializer):
             },
         }
 
+    @staticmethod
+    def invalid_answer(question, valid_answers):
+        raise serializers.ValidationError(
+            f"Answers must be one of the following for question {question.id}: "
+            f"{[answer.id for answer in valid_answers]}"
+        )
+
     def get(self, request):
         replies = Reply.objects.filter(user_id=request.user.id)
         simple = "full" not in request.query_params
@@ -62,8 +69,16 @@ class ReplySerializer(serializers.Serializer):
             user_id=validated_data["user_id"],
             question_id=validated_data["question_id"],
         )
-        voted_answer = Answer.objects.get(id=validated_data["vote_id"])
-        predicted_answer = Answer.objects.get(id=validated_data["prediction_id"])
+        question = Question.objects.get(id=validated_data["question_id"])
+        valid_answers = question.answers.all()
+        try:
+            voted_answer = Answer.objects.get(id=validated_data["vote_id"])
+            predicted_answer = Answer.objects.get(id=validated_data["prediction_id"])
+        except Answer.DoesNotExist:
+            self.invalid_answer(question, valid_answers)
+        for answer in [voted_answer, predicted_answer]:
+            if answer not in valid_answers:
+                self.invalid_answer(question, valid_answers)
         if existing_reply:
             vote = Vote.objects.get(reply=existing_reply)
             vote.answer = voted_answer

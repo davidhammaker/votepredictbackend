@@ -42,4 +42,4 @@ class ReplyView(views.APIView):
             # validated_data in the create() method of the serializer.
             serializer.save(user_id=request.user.id)
             return Response(serializer.instance)
-        return Response("Something went wrong.", 400)
+        return Response(serializer.errors, 400)
