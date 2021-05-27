@@ -1,4 +1,4 @@
-from datetime import datetime  # TODO: Make sure utcnow works well
+from datetime import datetime  # TODO: Make sure utcnow works well; warning about naive datetime
 
 from django.utils import timezone
 from rest_framework import views, viewsets
@@ -42,4 +42,36 @@ class ReplyView(views.APIView):
             # validated_data in the create() method of the serializer.
             serializer.save(user_id=request.user.id)
             return Response(serializer.instance)
-        return Response(serializer.errors, 400)
+        return Response({"detail": serializer.errors[0]}, 400)
+
+
+class TotalsView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def format_totals(question, request):
+        totals = {
+            answer.id: answer.votes.count() for answer in question.answers.all()
+        }
+        question_final = {
+            "id": question.id,
+            "content": question.content,
+            "answers": [
+                {"id": answer.id, "content": answer.content} for answer in question.answers.all()
+            ],
+            "totals": totals
+        }
+        reply = Reply.objects.filter(question_id=question.id, user_id=request.user.id).first()
+        if reply:
+            question_update = {
+                "vote": reply.vote.id,
+                "prediction": reply.prediction.id,  # TODO: Sum correct predictions
+                "correct_prediction": totals[reply.prediction.answer.id] == max(totals.values()),
+            }
+            question_final.update(question_update)
+        return question_final
+
+    def get(self, request):
+        questions = Question.objects.filter(end_date__lte=datetime.utcnow()).all()
+        question_totals = [self.format_totals(question, request) for question in questions]
+        return Response(question_totals)

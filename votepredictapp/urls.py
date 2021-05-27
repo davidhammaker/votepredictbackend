@@ -9,4 +9,5 @@ router.register(r"questions", views.QuestionViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("reply/", views.ReplyView.as_view()),
+    path("totals/", views.TotalsView.as_view()),
 ]
