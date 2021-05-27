@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from rest_framework import serializers
 
 from .models import Answer, Prediction, Question, Reply, Vote
@@ -69,7 +71,15 @@ class ReplySerializer(serializers.Serializer):
             user_id=validated_data["user_id"],
             question_id=validated_data["question_id"],
         )
-        question = Question.objects.get(id=validated_data["question_id"])
+        try:
+            question = Question.objects.filter(
+                start_date__lte=datetime.utcnow(),
+                end_date__gte=datetime.utcnow(),
+            ).get(id=validated_data["question_id"])
+        except Question.DoesNotExist:
+            raise serializers.ValidationError(
+                f"Question {validated_data['question_id']} is not active or does not exist"
+            )
         valid_answers = question.answers.all()
         try:
             voted_answer = Answer.objects.get(id=validated_data["vote_id"])
