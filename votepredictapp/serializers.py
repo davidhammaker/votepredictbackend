@@ -1,5 +1,5 @@
-from datetime import datetime
-
+import pytz
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Answer, Prediction, Question, Reply, Vote
@@ -67,14 +67,14 @@ class ReplySerializer(serializers.Serializer):
         return [self.format_reply(reply, simple=simple) for reply in replies]
 
     def create(self, validated_data):
-        existing_reply = Reply.objects.get(
+        existing_reply = Reply.objects.filter(
             user_id=validated_data["user_id"],
             question_id=validated_data["question_id"],
-        )
+        ).first()
         try:
             question = Question.objects.filter(
-                start_date__lte=datetime.utcnow(),
-                end_date__gte=datetime.utcnow(),
+                start_date__lte=timezone.datetime.now(pytz.utc),
+                end_date__gte=timezone.datetime.now(pytz.utc),
             ).get(id=validated_data["question_id"])
         except Question.DoesNotExist:
             raise serializers.ValidationError(
@@ -99,6 +99,7 @@ class ReplySerializer(serializers.Serializer):
             reply = existing_reply
         else:
             reply = Reply(
+                user_id=validated_data["user_id"],
                 question_id=validated_data["question_id"],
             )
             reply.save()

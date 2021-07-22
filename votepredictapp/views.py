@@ -1,26 +1,25 @@
-from datetime import datetime  # TODO: Make sure utcnow works well; warning about naive datetime
-
+import pytz
 from django.utils import timezone
 from rest_framework import views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Answer, Prediction, Question, Reply, Vote
+from .models import Question, Reply
 from .serializers import QuestionSerializer, ReplySerializer
 
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
     queryset = Question.objects.filter(
-        start_date__lte=datetime.utcnow(),
-        end_date__gte=datetime.utcnow(),
+        start_date__lte=timezone.datetime.now(pytz.utc),
+        end_date__gte=timezone.datetime.now(pytz.utc),
     )
 
     @action(detail=False)
     def closed(self, _request):
         closed_questions = Question.objects.all().filter(
-            end_date__lte=datetime.utcnow()
+            end_date__lte=timezone.datetime.now(pytz.utc)
         )
         serializer = self.get_serializer(closed_questions, many=True)
         return Response(serializer.data)
@@ -50,28 +49,40 @@ class TotalsView(views.APIView):
 
     @staticmethod
     def format_totals(question, request):
-        totals = {
-            answer.id: answer.votes.count() for answer in question.answers.all()
-        }
+        totals = {answer.id: answer.votes.count() for answer in question.answers.all()}
         question_final = {
             "id": question.id,
             "content": question.content,
             "answers": [
-                {"id": answer.id, "content": answer.content} for answer in question.answers.all()
+                {"id": answer.id, "content": answer.content}
+                for answer in question.answers.all()
             ],
-            "totals": totals
+            "totals": totals,
         }
-        reply = Reply.objects.filter(question_id=question.id, user_id=request.user.id).first()
+        reply = Reply.objects.filter(
+            question_id=question.id, user_id=request.user.id
+        ).first()
         if reply:
             question_update = {
-                "vote": reply.vote.id,
-                "prediction": reply.prediction.id,  # TODO: Sum correct predictions
-                "correct_prediction": totals[reply.prediction.answer.id] == max(totals.values()),
+                "vote": reply.vote.answer.id,
+                "prediction": reply.prediction.answer.id,
+                "correct_prediction": totals[reply.prediction.answer.id]
+                == max(totals.values()),
             }
             question_final.update(question_update)
         return question_final
 
     def get(self, request):
-        questions = Question.objects.filter(end_date__lte=datetime.utcnow()).all()
-        question_totals = [self.format_totals(question, request) for question in questions]
-        return Response(question_totals)
+        questions = Question.objects.filter(
+            end_date__lte=timezone.datetime.now(pytz.utc)
+        ).all()
+        question_totals = list()
+        correct_predictions = 0
+        for question in questions:
+            question_total = self.format_totals(question, request)
+            question_totals.append(question_total)
+            if question_total.get("correct_prediction"):
+                correct_predictions += 1
+        return Response(
+            {"questions": question_totals, "correct_predictions": correct_predictions}
+        )
