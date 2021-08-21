@@ -27,6 +27,7 @@ class ReplySerializer(serializers.Serializer):
 
     @staticmethod
     def format_reply(reply, simple=False):
+        # TODO: Consider simplifying this method
         if simple:
             return {
                 "id": reply.id,
@@ -67,6 +68,7 @@ class ReplySerializer(serializers.Serializer):
         return [self.format_reply(reply, simple=simple) for reply in replies]
 
     def create(self, validated_data):
+        # TODO: Try to shorten / simplify this method
         existing_reply = Reply.objects.filter(
             user_id=validated_data["user_id"],
             question_id=validated_data["question_id"],
