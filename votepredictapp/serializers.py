@@ -27,33 +27,23 @@ class ReplySerializer(serializers.Serializer):
 
     @staticmethod
     def format_reply(reply, simple=False):
-        # TODO: Consider simplifying this method
-        if simple:
-            return {
-                "id": reply.id,
-                "question": {"id": reply.question.id},
-                "vote": {"id": reply.vote.id, "answer": reply.vote.answer.id},
-                "prediction": {
-                    "id": reply.prediction.id,
-                    "answer": reply.prediction.answer.id,
-                },
-            }
-        return {
+        response = {
             "id": reply.id,
-            "question": {
-                "id": reply.question.id,
-                "content": reply.question.content,
-                "answers": [
-                    {"id": answer.id, "content": answer.content}
-                    for answer in reply.question.answers.all()
-                ],
-            },
+            "question": {"id": reply.question.id},
             "vote": {"id": reply.vote.id, "answer": reply.vote.answer.id},
             "prediction": {
                 "id": reply.prediction.id,
                 "answer": reply.prediction.answer.id,
             },
         }
+        if simple:
+            return response
+        response["question"]["content"] = reply.question.content
+        response["question"]["answers"] = [
+            {"id": answer.id, "content": answer.content}
+            for answer in reply.question.answers.all()
+        ]
+        return response
 
     @staticmethod
     def invalid_answer(question, valid_answers):

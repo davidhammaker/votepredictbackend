@@ -49,7 +49,6 @@ class TotalsView(views.APIView):
 
     @staticmethod
     def format_totals(question, request):
-        # TODO: Consider creating a model for "totals"
         totals = {answer.id: answer.votes.count() for answer in question.answers.all()}
         question_final = {
             "id": question.id,
