@@ -77,14 +77,17 @@ WSGI_APPLICATION = "votepredictbackend.wsgi.application"
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': 5432,
-    }
+    "default": {
+        "ENGINE": os.environ.get("DB_ENGINE", default="django.db.backends.sqlite3"),
+        "NAME": "postgres",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "db",
+        "PORT": 5432,
+        "TEST": {
+            "NAME": "test_database",
+        },
+    },
 }
 
 
