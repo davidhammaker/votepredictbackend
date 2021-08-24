@@ -45,42 +45,36 @@ class ReplySerializer(serializers.Serializer):
         ]
         return response
 
-    @staticmethod
-    def invalid_answer(question, valid_answers):
-        raise serializers.ValidationError(
-            f"Answers must be one of the following for question {question.id}: "
-            f"{[answer.id for answer in valid_answers]}"
-        )
-
     def get(self, request):
         replies = Reply.objects.filter(user_id=request.user.id)
         simple = "full" not in request.query_params
         return [self.format_reply(reply, simple=simple) for reply in replies]
 
     def create(self, validated_data):
-        # TODO: Try to shorten / simplify this method
         existing_reply = Reply.objects.filter(
             user_id=validated_data["user_id"],
             question_id=validated_data["question_id"],
         ).first()
-        try:
-            question = Question.objects.filter(
-                start_date__lte=timezone.datetime.now(pytz.utc),
-                end_date__gte=timezone.datetime.now(pytz.utc),
-            ).get(id=validated_data["question_id"])
-        except Question.DoesNotExist:
+        question = Question.objects.filter(
+            start_date__lte=timezone.datetime.now(pytz.utc),
+            end_date__gte=timezone.datetime.now(pytz.utc),
+            id=validated_data["question_id"],
+        ).first()
+        if not question:
             raise serializers.ValidationError(
-                f"Question {validated_data['question_id']} is not active or does not exist"
+                f"Question {validated_data['question_id']} is not active or does not "
+                f"exist"
             )
-        valid_answers = question.answers.all()
-        try:
-            voted_answer = Answer.objects.get(id=validated_data["vote_id"])
-            predicted_answer = Answer.objects.get(id=validated_data["prediction_id"])
-        except Answer.DoesNotExist:
-            self.invalid_answer(question, valid_answers)
+        voted_answer = question.answers.filter(id=validated_data["vote_id"]).first()
+        predicted_answer = question.answers.filter(
+            id=validated_data["prediction_id"]
+        ).first()
         for answer in [voted_answer, predicted_answer]:
-            if answer not in valid_answers:
-                self.invalid_answer(question, valid_answers)
+            if not answer:
+                raise serializers.ValidationError(
+                    f"Answers must be one of the following for question {question.id}: "
+                    f"{[answer.id for answer in question.answers.all()]}"
+                )
         if existing_reply:
             vote = Vote.objects.get(reply=existing_reply)
             vote.answer = voted_answer

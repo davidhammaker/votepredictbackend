@@ -16,7 +16,9 @@ class ModelsTests(TestCase):
             end_date=self.start_date + timedelta(days=1),
         )
         self.sample_user = User(username="sample_user")
-        self.sample_answer = Answer(content="sample answer content", question=self.sample_question)
+        self.sample_answer = Answer(
+            content="sample answer content", question=self.sample_question
+        )
         self.sample_reply = Reply()
 
     def test_new_question(self):
