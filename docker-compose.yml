@@ -13,6 +13,7 @@ services:
     build: .
     environment:
       - SECRET_KEY
+      - RELOAD
     command: ./utils/startup.sh
     volumes:
       - .:/code
