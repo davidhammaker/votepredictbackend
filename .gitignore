@@ -3,6 +3,7 @@ venv
 __pycache__
 static
 data
+.env
 
 db.sqlite3
 postgres
