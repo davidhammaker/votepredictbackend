@@ -1,0 +1,4 @@
+ignore:
+  - "votepredictbackend/asgi.py"
+  - "votepredictbackend/wsgi.py"
+  - "manage.py"
