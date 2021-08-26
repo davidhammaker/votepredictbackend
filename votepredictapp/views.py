@@ -40,8 +40,8 @@ class ReplyView(views.APIView):
             # am manually adding user_id to be included in
             # validated_data in the create() method of the serializer.
             serializer.save(user_id=request.user.id)
-            return Response(serializer.instance)
-        return Response({"detail": serializer.errors[0]}, 400)
+            return Response(serializer.instance, 201)
+        return Response({"detail": serializer.errors}, 400)
 
 
 class TotalsView(views.APIView):

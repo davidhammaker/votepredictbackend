@@ -2,7 +2,7 @@ import pytz
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Answer, Prediction, Question, Reply, Vote
+from .models import Prediction, Question, Reply, Vote
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -62,8 +62,10 @@ class ReplySerializer(serializers.Serializer):
         ).first()
         if not question:
             raise serializers.ValidationError(
-                f"Question {validated_data['question_id']} is not active or does not "
-                f"exist"
+                {
+                    "detail": f"Question {validated_data['question_id']} is not active "
+                    f"or does not exist"
+                }
             )
         voted_answer = question.answers.filter(id=validated_data["vote_id"]).first()
         predicted_answer = question.answers.filter(
@@ -72,8 +74,11 @@ class ReplySerializer(serializers.Serializer):
         for answer in [voted_answer, predicted_answer]:
             if not answer:
                 raise serializers.ValidationError(
-                    f"Answers must be one of the following for question {question.id}: "
-                    f"{[answer.id for answer in question.answers.all()]}"
+                    {
+                        "detail": f"Answers must be one of the following for question "
+                        f"{question.id}: "
+                        f"{[answer.id for answer in question.answers.all()]}"
+                    }
                 )
         if existing_reply:
             vote = Vote.objects.get(reply=existing_reply)
