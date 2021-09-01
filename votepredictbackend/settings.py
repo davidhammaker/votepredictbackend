@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
     "votepredictapp.apps.VotepredictappConfig",
     "users.apps.UsersConfig",
 ]
@@ -45,6 +46,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "votepredictbackend.urls"
@@ -131,3 +133,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ]
 }
+
+
+# CORS Configuration
+CORS_ORIGIN_ALLOW_ALL = True
