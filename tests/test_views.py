@@ -1,6 +1,5 @@
 from unittest import mock
 
-import pytz
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
@@ -9,32 +8,28 @@ from votepredictapp.models import Answer, Prediction, Question, Reply, Vote
 from votepredictapp.views import ReplyView, TotalsView
 
 
-def utc_date(year: int, month: int, day: int):
-    return timezone.datetime(year, month, day, tzinfo=pytz.utc)
-
-
 class TestViews(APITestCase):
     def setUp(self) -> None:
         # Request factory
         self.factory = APIRequestFactory()
 
         # Questions with dates
+        self.today = timezone.now()
         self.open_question = Question.objects.create(
             content="open question",
-            start_date=utc_date(2021, 8, 1),
-            end_date=utc_date(2021, 8, 31),
+            start_date=self.today - timezone.timedelta(days=7),
+            end_date=self.today + timezone.timedelta(days=7),
         )
         self.closed_question = Question.objects.create(
             content="closed question",
-            start_date=utc_date(2021, 7, 1),
-            end_date=utc_date(2021, 7, 31),
+            start_date=self.today - timezone.timedelta(days=14),
+            end_date=self.today - timezone.timedelta(days=7),
         )
         self.future_question = Question.objects.create(
             content="future question",
-            start_date=utc_date(2021, 9, 1),
-            end_date=utc_date(2021, 9, 30),
+            start_date=self.today + timezone.timedelta(days=7),
+            end_date=self.today + timezone.timedelta(days=14),
         )
-        self.today = utc_date(2021, 8, 23)
 
         # Answers
         Answer.objects.create(content="answer 1", question=self.closed_question)
@@ -70,21 +65,21 @@ class TestViews(APITestCase):
 
     @mock.patch("votepredictapp.models.timezone")
     def test_questions_list_view(self, mock_timezone):
-        mock_timezone.datetime.now.return_value = self.today
+        mock_timezone.now.return_value = self.today
         response = self.client.get("/questions/")
         assert len(response.data) == 1
         assert response.data[0]["content"] == "open question"
 
     @mock.patch("votepredictapp.models.timezone")
     def test_closed_questions(self, mock_timezone):
-        mock_timezone.datetime.now.return_value = self.today
+        mock_timezone.now.return_value = self.today
         response = self.client.get("/questions/closed/")
         assert len(response.data) == 1
         assert response.data[0]["content"] == "closed question"
 
     @mock.patch("votepredictapp.models.timezone")
     def test_questions_detail_view(self, mock_timezone):
-        mock_timezone.datetime.now.return_value = self.today
+        mock_timezone.now.return_value = self.today
         response = self.client.get("/questions/1/")
         assert response.data["content"] == "open question"
 
